@@ -39,3 +39,22 @@ kubectl scale deployment httpd-server --replicas=10 -n ks-load; kubectl scale de
 ### Control the load
 
 - You can add load by setting the PARALLEL_DOWNLOADS property to cause each client to trigger multiple parallel downloads.
+
+## How to Run
+
+Optinally alter its properties and apply The [load-test.yaml](load-test.yaml) manifest:
+```shell
+kubectl apply -f load-test.yaml
+```
+## View outcome with Kubeshark
+
+Run the following command:
+```shell
+kubeshark tap -n ks-load
+```
+And see the results:
+
+<img width="1387" alt="image" src="https://github.com/kubeshark/k8s-cluster-load-test/assets/1990761/f2b70fe3-ab9a-4322-85f0-27b7a052f25a">
+<img width="1434" alt="image" src="https://github.com/kubeshark/k8s-cluster-load-test/assets/1990761/bc8deda2-1a87-40cd-89fe-ad9027541b45">
+
+
