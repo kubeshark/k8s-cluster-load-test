@@ -67,6 +67,6 @@ Run the following command:
 kubeshark tap -n ks-load
 ```
 And see the results:
-<img width="1448" alt="image" src="https://github.com/kubeshark/k8s-cluster-load-test/assets/service-map.png">
+![Service Map](assets/service-map.png)
 
 
