@@ -9,10 +9,10 @@ metadata:
   name: ks-config
   namespace: ks-load
 data:
-  FILE_SIZE: "SMALL"        # use either SMALL (~12KB) or LARGE (~500KB)
-  DELAY: "0"                # Delay between consecutive downloads.
-  RATE_LIMIT: "500k"        # Limit download rate
-  PARALLEL_DOWNLOADS: "50"  # Number of parallel downloads per client container
+  FILE_SIZE: "SMALL"          # use either SMALL (~12KB) or LARGE (~500KB)
+  DELAY: "0"                  # Delay between consecutive downloads.
+  RATE_LIMIT: "500k"          # Limit download rate
+  PARALLEL_DOWNLOADS: "50"   # Number of parallel downloads per client container
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -20,7 +20,7 @@ metadata:
   name: httpd-server
   namespace: ks-load
 spec:
-  replicas: 5               # Number of httpd servers
+  replicas: 5                 # Number of httpd servers
   selector:
     matchLabels:
       app: httpd-server
@@ -54,7 +54,7 @@ metadata:
   name: curl-client
   namespace: ks-load
 spec:
-  replicas: 10               # umber of CURL client (each clients run parralel downloads)
+  replicas: 10                    # umber of CURL client (each clients run parallel downloads)
   selector:
     matchLabels:
       app: curl-client
