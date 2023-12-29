@@ -29,8 +29,11 @@ A total of M+N pods are launched, where N is the number of k6-load-test replicas
             value: "0"
 ```
 ## Available Files to Download
+
 505742B - http://httpd-service.ks-load.svc.cluster.local/smap.png
+
 1024B   - http://httpd-service.ks-load.svc.cluster.local/1k.png
+
 12164B   - http://httpd-service.ks-load.svc.cluster.local/ks_logo.png
 
 ## Replicas
