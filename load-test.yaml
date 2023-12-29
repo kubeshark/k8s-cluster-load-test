@@ -3,98 +3,78 @@ kind: Namespace
 metadata:
   name: ks-load
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ks-config
-  namespace: ks-load
-data:
-  FILE_SIZE: "SMALL"          # use either SMALL (~12KB) or LARGE (~500KB)
-  DELAY: "0"                  # Delay between consecutive downloads.
-  RATE_LIMIT: "500k"          # Limit download rate
-  PARALLEL_DOWNLOADS: "50"   # Number of parallel downloads per client container
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: httpd-server
+  name: httpd-service
   namespace: ks-load
 spec:
-  replicas: 5                 # Number of httpd servers
+  replicas: 4               # Number of httpd servers
   selector:
     matchLabels:
-      app: httpd-server
+      app: httpd-service
   template:
     metadata:
       labels:
-        app: httpd-server
+        app: httpd-service
     spec:
       containers:
       - name: httpd
-        image: kubeshark/ks-load-httpd:latest
+        image: alongir/ks-load-httpd:latest
         ports:
         - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: httpd-server
+  name: httpd-service
   namespace: ks-load
 spec:
   selector:
-    app: httpd-server
+    app: httpd-service
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
+  type: ClusterIP
+
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: curl-client
+  name: k6-load-test
   namespace: ks-load
 spec:
-  replicas: 10                    # umber of CURL client (each clients run parallel downloads)
+  replicas: 10  # Number of replicas
   selector:
     matchLabels:
-      app: curl-client
+      app: k6-load-test
   template:
     metadata:
       labels:
-        app: curl-client
+        app: k6-load-test
     spec:
       containers:
-      - name: curl
-        image: alpine:latest
-        command:
-        - /bin/sh
-        - -c
-        args:
-        - |
-          apk add --no-cache curl
-          while true; do
-            for i in $(seq 1 ${PARALLEL_DOWNLOADS}); do
-              if [ "${FILE_SIZE}" = "LARGE" ]; then
-                curl --limit-rate ${RATE_LIMIT} -O http://httpd-server.ks-load.svc.cluster.local/smap.png &
-              else
-                curl --limit-rate ${RATE_LIMIT} -O http://httpd-server.ks-load.svc.cluster.local/ks_logo.png &
-              fi
-            done
-            wait
-            sleep ${DELAY}
-          done
-        envFrom:
-        - configMapRef:
-            name: ks-config
+      - name: k6
+        image: alongir/k6-loadtest:latest
+        env:
+          - name: VUS
+            value: "300"
+          - name: DURATION
+            value: "3h"
+          - name: URL
+            value: "http://httpd-service.ks-load.svc.cluster.local/smap.png"
+          - name: SLEEP
+            value: "0"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: curl-client
+  name: k6-load-test
   namespace: ks-load
 spec:
   selector:
-    app: curl-client
+    app: k6-load-test
   ports:
     - protocol: TCP
       port: 80

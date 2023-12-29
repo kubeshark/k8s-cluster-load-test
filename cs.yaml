@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: List
+items:
+
+# HTTP Server Pod
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    name: http-server
+    labels:
+      app: http-server
+  spec:
+    containers:
+    - name: server
+      image: httpd
+      ports:
+      - containerPort: 80
+      volumeMounts:
+      - name: http-server-volume
+        mountPath: /usr/local/apache2/htdocs/
+    volumes:
+    - name: http-server-volume
+      emptyDir: {}
+    initContainers:
+    - name: init-server
+      image: busybox
+      command: ['sh', '-c', 'echo "hi" > /http-server-volume/emptyfile.txt']
+      volumeMounts:
+      - name: http-server-volume
+        mountPath: /http-server-volume
+
+# HTTP Server Service
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: http-server
+  spec:
+    selector:
+      app: http-server
+    ports:
+      - protocol: TCP
+        port: 80
+        targetPort: 80
+
+# HTTP Client Pod
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    name: http-client
+    labels:
+      app: http-client
+  spec:
+    containers:
+    - name: client
+      image: curlimages/curl
+      command: ["sh", "-c", "while true; do curl http://http-server/emptyfile.txt -o /dev/null; sleep 5; done"]
