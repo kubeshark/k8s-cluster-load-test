@@ -9,7 +9,7 @@ metadata:
   name: caddy-service
   namespace: ks-load
 spec:
-  replicas: 4               # Number of caddy servers
+  replicas: 3               # Number of httpd servers
   selector:
     matchLabels:
       app: caddy-service
@@ -51,7 +51,7 @@ metadata:
   name: k6-load-test
   namespace: ks-load
 spec:
-  replicas: 10  # Number of replicas
+  replicas: 3  # Number of replicas
   selector:
     matchLabels:
       app: k6-load-test
@@ -65,7 +65,7 @@ spec:
         image: alongir/k6-loadtest:latest
         env:
           - name: VUS
-            value: "300"
+            value: "100"
           - name: DURATION
             value: "3h"
           - name: URL
