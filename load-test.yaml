@@ -6,36 +6,42 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: httpd-service
+  name: caddy-service
   namespace: ks-load
 spec:
-  replicas: 4               # Number of httpd servers
+  replicas: 4               # Number of caddy servers
   selector:
     matchLabels:
-      app: httpd-service
+      app: caddy-service
   template:
     metadata:
       labels:
-        app: httpd-service
+        app: caddy-service
     spec:
       containers:
       - name: httpd
-        image: alongir/ks-load-httpd:latest
+        image: corest/build:kubeshark-load-test-caddy-0.0.4
         ports:
         - containerPort: 80
+        - containerPort: 443
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: httpd-service
+  name: caddy-service
   namespace: ks-load
 spec:
   selector:
-    app: httpd-service
+    app: caddy-service
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
+      name: http
+    - protocol: TCP
+      port: 443
+      targetPort: 443
+      name: https
   type: ClusterIP
 
 ---
@@ -56,14 +62,14 @@ spec:
     spec:
       containers:
       - name: k6
-        image: alongir/k6-loadtest:latest
+        image: corest/build:kubeshark-load-test-grafana-k6-0.0.2
         env:
           - name: VUS
             value: "300"
           - name: DURATION
             value: "3h"
           - name: URL
-            value: "http://httpd-service.ks-load.svc.cluster.local/smap.png"
+            value: "http://caddy-service.ks-load.svc.cluster.local/smap.png"
           - name: SLEEP
             value: "0"
 ---
