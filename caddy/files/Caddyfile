@@ -1,0 +1,14 @@
+{
+auto_https disable_redirects
+}
+
+:80 {
+root * /usr/share/caddy
+file_server
+}
+
+:443 {
+root * /usr/share/caddy
+tls /etc/caddy/certs/dev-kubeshark-io.crt /etc/caddy/certs/dev-kubeshark-io.key
+file_server
+}
