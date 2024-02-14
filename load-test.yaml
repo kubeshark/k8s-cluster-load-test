@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: httpd
-        image: corest/build:kubeshark-load-test-caddy-0.0.4
+        image: alongir/ks-load-caddy:latest
         ports:
         - containerPort: 80
         - containerPort: 443
@@ -62,7 +62,7 @@ spec:
     spec:
       containers:
       - name: k6
-        image: corest/build:kubeshark-load-test-grafana-k6-0.0.2
+        image: alongir/k6-loadtest:latest
         env:
           - name: VUS
             value: "300"
