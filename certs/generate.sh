@@ -64,7 +64,7 @@ cat > ${CERTCFG} <<EOF
   "CN": "*.dev.kubeshark.io",
   "hosts": [
     "localhost",
-    "caddy-service.ks-load.svc.cluster.local",
+    "server.ks-load.svc.cluster.local",
     "127.0.0.1"
   ],
   "key": {
@@ -88,8 +88,8 @@ cfssl gencert \
   -config=${CACFG} \
   -profile=server ${CERTCFG} | cfssljson -bare ${WORKDIR}/dev-kubeshark-io
 
-# Copy the generated certificates to the caddy/certs directory
-cp ${WORKDIR}/*.pem ../caddy/certs/
+# Copy the generated certificates to the nginx/certs directory
+cp ${WORKDIR}/*.pem ../nginx/certs/
 
 # Copy CA to the k6 directory
 cp ${WORKDIR}/ca.pem ../k6/certs/

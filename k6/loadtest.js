@@ -1,4 +1,4 @@
-// http://caddy-service.ks-load.svc.cluster.local/smap.png
+// http://server.ks-load.svc.cluster.local/smap.png
 import http from 'k6/http';
 import { sleep, check } from 'k6';
 
