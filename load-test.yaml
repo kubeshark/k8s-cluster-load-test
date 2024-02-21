@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: http-server
-        image: corest/build:kubeshark-load-test-nginx-0.0.2
+        image: kubehq/k6s-load-server:latest
         ports:
         - containerPort: 80
         - containerPort: 443
@@ -62,14 +62,14 @@ spec:
     spec:
       containers:
       - name: k6
-        image: corest/build:kubeshark-load-test-grafana-k6-0.0.3
+        image: kubehq/k6s-load-test:latest
         env:
           - name: VUS
             value: "100"
           - name: DURATION
             value: "3h"
           - name: URL
-            value: "http://server.ks-load.svc.cluster.local/smap.png"
+            value: "https://server.ks-load.svc.cluster.local/smap.png"
           - name: SLEEP
             value: "0"
 ---
