@@ -7,9 +7,9 @@ This repository is useful for conducting load tests on your Kubernetes cluster.
 The load test is composed of two sets of either client or server pods:
 
 - N * k6-load-test
-- M * caddy-service
+- M * server
 
-A total of M+N pods are launched, where N is the number of k6-load-test replicas, and M is the number of caddy-service replicas. Both replica numbers can be configured in the `load-test.yaml` manifest.
+A total of M+N pods are launched, where N is the number of k6-load-test replicas, and M is the number of server replicas. Both replica numbers can be configured in the `load-test.yaml` manifest.
 
 ## Configuration
 
@@ -24,17 +24,17 @@ A total of M+N pods are launched, where N is the number of k6-load-test replicas
           - name: DURATION  # duration of keeping the load after a 20s ramp up
             value: "3h"
           - name: URL       # The URL to download
-            value: "http://caddy-service.ks-load.svc.cluster.local/smap.png"
+            value: "http://server.ks-load.svc.cluster.local/smap.png"
           - name: SLEEP     # Wait time between downloads
             value: "0"
 ```
 ## Available Files to Download
 
-505742B - http://caddy-service.ks-load.svc.cluster.local/smap.png
+505742B - http://server.ks-load.svc.cluster.local/smap.png
 
-1024B   - http://caddy-service.ks-load.svc.cluster.local/1k.png
+1024B   - http://server.ks-load.svc.cluster.local/1k.png
 
-12164B   - http://caddy-service.ks-load.svc.cluster.local/ks_logo.png
+12164B   - http://server.ks-load.svc.cluster.local/ks_logo.png
 
 ## Testing with TLS
 
