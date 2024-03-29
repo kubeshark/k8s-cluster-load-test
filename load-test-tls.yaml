@@ -69,11 +69,11 @@ spec:
           - name: DURATION
             value: "3h"
           - name: URL
-            value: "http://server.ks-load.svc.cluster.local/smap.png"
+            value: "https://server.ks-load.svc.cluster.local/smap.png"
           - name: SLEEP
             value: "1"
-          - name: CONNECTION
-            value: "keep-alive"
+          # - name: CONNECTION
+          #   value: "keep-alive"
 ---
 apiVersion: v1
 kind: Service

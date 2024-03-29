@@ -14,11 +14,17 @@ var counter = 0
 export default function () {
   let targetUrl = __ENV.URL || 'https://google.com/';
 
+  let params = {
+    headers: {
+      'Connection':  __ENV.CONNECTION || 'close'
+    }
+  };
+
   // Unique identifier for each request
-  let uniqueParam = `i=${__VU}-${__ITER}`;
+  let uniqueParam = `i=${__VU}-${__ITER}&connection=${__ENV.CONNECTION}`;
 
     // Making the request
-    let response = http.get(`${targetUrl}?${uniqueParam}`);
+    let response = http.get(`${targetUrl}?${uniqueParam}`, params);
     check(response, { 'status was 200': (r) => r.status == 200 });
 
   let sleepDuration = parseFloat(__ENV.SLEEP) || 1;
