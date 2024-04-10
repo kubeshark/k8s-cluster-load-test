@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: http-server
-        image: kubehq/k6s-load-server:latest
+        image: kubeshark/mert-k6s-load-server:latest
         ports:
         - containerPort: 80
         - containerPort: 443
@@ -62,14 +62,14 @@ spec:
     spec:
       containers:
       - name: k6
-        image: kubehq/k6s-load-test:latest
+        image: kubeshark/mert-k6s-load-test:latest
         env:
           - name: VUS
             value: "10"
           - name: DURATION
             value: "3h"
           - name: URL
-            value: "https://server.ks-load.svc.cluster.local/smap.png"
+            value: "https://server.ks-load.svc.cluster.local:443/smap.png"
           - name: SLEEP
             value: "1"
           # - name: CONNECTION

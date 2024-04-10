@@ -8,5 +8,3 @@ RUN cat /usr/local/share/ca-certificates/ks-ca.crt >> /etc/ssl/certs/ca-certific
     update-ca-certificates
 
 ENTRYPOINT ["k6", "run", "/loadtest.js"]
-
-# docker buildx build --platform linux/amd64 -t alongir/k6-loadtest:latest . --push 
