@@ -65,15 +65,15 @@ spec:
         image: kubeshark/mert-k6s-load-test:latest
         env:
           - name: VUS
-            value: "10"
+            value: "1"
           - name: DURATION
-            value: "3h"
+            value: "5h"
           - name: URL
             value: "http://server.ks-load.svc.cluster.local/smap.png"
           - name: SLEEP
-            value: "1"
-          - name: CONNECTION
-            value: "keep-alive"
+            value: "20"
+          # - name: CONNECTION
+          #   value: "keep-alive"
 ---
 apiVersion: v1
 kind: Service
