@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Set the version number as a variable
-VERSION="v52.3.74"
+VERSION="v52.3.88"
 
 # Navigate to the certs directory and generate certificates
 cd certs

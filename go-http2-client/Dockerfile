@@ -32,4 +32,4 @@ COPY --from=builder /app/app .
 # EXPOSE 8080
 
 # Command to run the executable, expecting URL and N as environment variables
-CMD ["sh", "-c", "./app $URL $N $V"]
+CMD ["sh", "-c", "./app $URL $N $D $V"]

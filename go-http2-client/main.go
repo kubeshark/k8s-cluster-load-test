@@ -17,20 +17,21 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 4 {
-		fmt.Println("Usage: ./app <URL> <N> <http_version>")
+	if len(os.Args) != 5 {
+		fmt.Println("Usage: ./app <URL> <N> <D> <http_version>: ", os.Args)
 		fmt.Println("       <http_version>: '1' for HTTP/1.1, '2' for HTTP/2")
 		os.Exit(1)
 	}
 
 	urlStr := os.Args[1]
 	N, err := strconv.Atoi(os.Args[2])
+	D, err := strconv.Atoi(os.Args[3])
 	if err != nil {
 		fmt.Println("Invalid number of requests:", os.Args[2])
 		os.Exit(1)
 	}
 
-	httpVersion := os.Args[3]
+	httpVersion := os.Args[4]
 	var client *http.Client
 	var transport http.RoundTripper
 
@@ -117,7 +118,7 @@ func main() {
 			fmt.Println(respBuf.String())
 
 			fmt.Printf("Request %d: Status Code %d\n", i+1, resp.StatusCode)
-			time.Sleep(2 * time.Second) // Sleep for 2 seconds
+			time.Sleep(time.Duration(D) * time.Second) // Sleep for D seconds
 		}
 
 		// Close idle connections after N requests

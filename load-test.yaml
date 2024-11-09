@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: http-server
-        image: kubeshark/k6s-load-server:v52.3.74
+        image: kubeshark/k6s-load-server:v52.3.88
         imagePullPolicy: Always
         ports:
         - containerPort: 80
@@ -62,7 +62,7 @@ spec:
     spec:
       containers:
       - name: k6
-        image: kubeshark/k6s-load-test:v52.3.74
+        image: kubeshark/k6s-load-test:v52.3.88
         imagePullPolicy: Always
         env:
           - name: VUS
@@ -70,7 +70,7 @@ spec:
           - name: DURATION
             value: "12h"
           - name: URL
-            value: "https://server.ks-load.svc.cluster.local/" #smap.png" # "https://nghttp2.org" 
+            value: "http://server.ks-load.svc.cluster.local/ks_logo.png" #smap.png" # "https://nghttp2.org" 
           - name: SLEEP
             value: "1"
           - name: CONNECTION
@@ -106,13 +106,15 @@ spec:
     spec:
       containers:
       - name: go-http2-client
-        image: kubeshark/go-http2-client:v52.3.74
+        image: kubeshark/go-http2-client:v52.3.88
         imagePullPolicy: Always
         env:
           - name: URL
             value: "http://http2-server.ks-load.svc.cluster.local/"  # The URL to send requests to
           - name: "N"
             value: "10"  # Number of requests to send per connection
+          - name: "D"
+            value: "2"  # Delay between requests in seconds
           - name: "V"
             value: "2"  # HTTP version (1 or 2)
 ---
@@ -146,7 +148,7 @@ spec:
     spec:
       containers:
       - name: http2-server
-        image: kubeshark/go-http2-server:v52.3.74
+        image: kubeshark/go-http2-server:v52.3.88
         imagePullPolicy: Always
         ports:
         - containerPort: 80
