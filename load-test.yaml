@@ -9,7 +9,7 @@ metadata:
   name: server
   namespace: ks-load
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: server
@@ -51,7 +51,7 @@ metadata:
   name: k6-load-test
   namespace: ks-load
 spec:
-  replicas: 3  # Number of replicas
+  replicas: 2  # Number of replicas
   selector:
     matchLabels:
       app: k6-load-test

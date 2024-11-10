@@ -51,7 +51,35 @@ function run_command() {
 export -f run_command
 
 # Function to install kubeshark
-function install_kubeshark() {
+function deploy() {
+    if [ ! -d "k8s-cluster-load-test" ]; then
+        gh repo clone kubeshark/k8s-cluster-load-test 
+        cd k8s-cluster-load-test 
+        git checkout load-test-1109024
+        cd ..
+    else
+        cd k8s-cluster-load-test
+        # git pull
+        cd ..
+    fi
+    if [ ! -d "sock-shop-demo" ]; then
+        gh repo clone kubeshark/sock-shop-demo
+    else
+        cd sock-shop-demo
+        # git pull
+        cd ..
+    fi
+    if [ ! -d "kubeshark" ]; then
+        gh repo clone kubeshark/kubeshark
+        cd kubeshark
+        make
+        cd ..
+    else
+        cd kubeshark
+        git pull
+        # make
+        cd ..   
+    fi
     local helm_params=(
         --set tap.packetCapture="$PACKET_CAPTURE"
         --set tap.namespaces[0]=ks-load
@@ -64,27 +92,20 @@ function install_kubeshark() {
 
     if [ "$TAG" == "master" ]; then
         # Install from local Helm chart directory
-        run_command helm install kubeshark ~/work/GitHub/kubeshark/helm-chart "${helm_params[@]}"
+        run_command helm install kubeshark kubeshark/helm-chart "${helm_params[@]}"
     else
         # Install from official Helm repository with specified version
         run_command helm install kubeshark kubeshark/kubeshark --version "$TAG" "${helm_params[@]}"
     fi
+
+     mySleep 10
+
+    run_command kubectl apply -f k8s-cluster-load-test/load-test.yaml 
+    run_command kubectl apply -f sock-shop-demo/deploy/kubernetes/ws-demo.yaml
+    run_command kubectl apply -f sock-shop-demo/deploy/kubernetes/tls-demo.yaml
 }
 
-# Function to simulate sleep with progress indication
-function mySleep3() {
-    local total_sleep=$1
-    local interval=10
-    local elapsed=0
 
-    echo -n "Sleeping for $total_sleep seconds"
-    while [ $elapsed -lt $total_sleep ]; do
-        sleep $interval
-        elapsed=$((elapsed + interval))
-        echo -n "."
-    done
-    echo
-}
 
 # Enhanced sleep function to optionally show file size if a file path is provided
 function mySleep() {
@@ -135,6 +156,8 @@ function checkResources() {
 
         # Format CPU usage to 2 decimal places
         total_cpu_formatted=$(printf "%.2f" "$total_cpu")
+        
+        # total_memory_formatted=$(printf "%'d" "$total_memory")
 
         # Format memory usage to human-readable format (GB or MB)
         if (( $(echo "$total_memory > 1073741824" | bc -l) )); then
@@ -165,7 +188,8 @@ function checkResources() {
 
 # Function to clean up resources
 function cleanUp() {
-    run_command kubectl delete -f k8s-cluster-load-test/load-test.yaml -f sock-shop-demo/deploy/kubernetes/complete-demo.yaml  --force --grace-period=0
+    run_command kubectl rollout restart deployment -n ks-load 
+    run_command kubectl rollout restart deployment -n sock-shop 
     # rm -rf /tmp/k8s-cluster-load-test /tmp/sock-shop-demo
     run_command helm uninstall kubeshark
     
@@ -185,107 +209,84 @@ function cleanUp() {
     fi
 }
 
+apply_recording() {
+    run_command curl 'http://0.0.0.0:8899/api/records' \
+        -H 'Accept: */*' \
+        -H 'Accept-Language: en-US,en;q=0.9' \
+        -H 'Cache-Control: no-cache' \
+        -H 'Connection: keep-alive' \
+        -H 'Content-Type: application/json' \
+        -H 'Origin: http://0.0.0.0:8899' \
+        -H 'Pragma: no-cache' \
+        -H 'Referer: http://0.0.0.0:8899/?q=' \
+        -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36' \
+        -H 'X-Authorization:' \
+        -H 'X-Kubeshark-Capture: ignore' \
+        -H 'X-Refresh-Token:' \
+        --data-raw '{"name":"example","query":"","cron":"* * * * * *","duration":3600000,"deleteAfter":172800000,"limit":1}' \
+        --insecure
+}
+
 # Main script execution
-cleanUp
-
-install_kubeshark
-
-mySleep 10
-
 current_dir=$(pwd)
+cleanUp
 cd /tmp
-if [ ! -d "/path/to/folder" ]; then
-    gh repo clone kubeshark/k8s-cluster-load-test -b load-test-1109024
-    gh repo clone kubeshark/sock-shop-demo
-fi
-run_command kubectl apply -f k8s-cluster-load-test/load-test.yaml 
-run_command kubectl apply -f sock-shop-demo/deploy/kubernetes/ws-demo.yaml
-run_command kubectl apply -f sock-shop-demo/deploy/kubernetes/tls-demo.yaml
-
-
-# echo "Port forwarding the kubeshark front end"
-run_command kubeshark proxy --set headless=true &
+deploy
+run_command kubeshark/bin/kubeshark__ proxy --set headless=true &
 KUBESHARK_PID=$!
-# echo "kubeshark PID: $KUBESHARK_PID"
 
 echo -e "\033[1mTesting resource utilization WITHOUT a websocket connection\033[0m"
-
-mySleep 6  
-
+mySleep 60  
 checkResources
 
 echo -e "\033[1mTesting resource utilization WITH a websocket connection\033[0m"
-
 timestamp=$(date +%s)
 file="/tmp/ws.load.$timestamp"
-
 {
     sleep 1
     echo ""
     sleep 240
 } | wscat --connect ws://0.0.0.0:8899/api/ws > "$file" 2>&1 &
 WS_PID=$!
-# echo "wscat PID: $WS_PID"
-mySleep 18 $file
-
+mySleep 180 $file
 checkResources
-
-# Get file size
 file_size=$(wc -c < $file)
-
-# Print file size with color based on size condition
 if [ "$file_size" -gt 1000 ]; then
     echo -e "Size of $file: ${GREEN}${file_size}B${RESET}"
 else
     echo -e "Size of $file: ${RED}${file_size}B${RESET}"
 fi
-
 if ps -p "$WS_PID" > /dev/null; then
     run_command kill "$WS_PID"
-    # echo "Killed WebSocket process with PID $WS_PID"
 fi
 
 echo -e "\033[1mTesting HTTP2\033[0m"
-
 file=/tmp/ws.http2.$timestamp
-
 {
     sleep 1
     echo "http2"
     sleep 60
 } | wscat --connect ws://0.0.0.0:8899/api/ws > "$file" 2>&1 &
 WS_PID=$!
-# echo "wscat PID: $WS_PID"
 mySleep 30 $file
-
-# Get file size
 file_size=$(wc -c < $file)
-
-# Print file size with color based on size condition
 if [ "$file_size" -gt 1000 ]; then
     echo -e "Size of $file: ${GREEN}${file_size}B${RESET}"
 else
     echo -e "Size of $file: ${RED}${file_size}B${RESET}"
 fi
 
-
 echo -e "\033[1mTesting WS\033[0m"
-
+kubectl rollout restart deployment -n sock-shop -l app=mizutest-websocket-client
 file=/tmp/ws.ws.$timestamp
-
 {
     sleep 1
     echo "ws"
     sleep 60
 } | wscat --connect ws://0.0.0.0:8899/api/ws > "$file" 2>&1 &
 WS_PID=$!
-# echo "wscat PID: $WS_PID"
 mySleep 30 $file
-
-# Get file size
 file_size=$(wc -c < $file)
-
-# Print file size with color based on size condition
 if [ "$file_size" -gt 1000 ]; then
     echo -e "Size of $file: ${GREEN}${file_size}B${RESET}"
 else
@@ -293,30 +294,38 @@ else
 fi
 
 echo -e "\033[1mTesting HTTPS\033[0m"
-
 file=/tmp/ws.https.$timestamp
-
 {
     sleep 1
     echo "tls and http"
     sleep 60
 } | wscat --connect ws://0.0.0.0:8899/api/ws > "$file" 2>&1 &
 WS_PID=$!
-# echo "wscat PID: $WS_PID"
 mySleep 30 $file
-
-# Get file size
 file_size=$(wc -c < $file)
-
-# Print file size with color based on size condition
 if [ "$file_size" -gt 1000 ]; then
     echo -e "Size of $file: ${GREEN}${file_size}B${RESET}"
 else
     echo -e "Size of $file: ${RED}${file_size}B${RESET}"
 fi
 
-
-
+echo -e "\033[1mTesting RECORDING\033[0m"
+file=/tmp/ws.recording.$timestamp
+apply_recording
+mySleep 30
+{
+    sleep 1
+    echo "record(\"example\")"
+    sleep 60
+}  | wscat --connect ws://0.0.0.0:8899/api/ws > "$file" 2>&1 &
+WS_PID=$!
+mySleep 30 $file
+file_size=$(wc -c < $file)
+if [ "$file_size" -gt 1000 ]; then
+    echo -e "Size of $file: ${GREEN}${file_size}B${RESET}"
+else
+    echo -e "Size of $file: ${RED}${file_size}B${RESET}"
+fi
 if ps -p "$WS_PID" > /dev/null; then
     run_command kill "$WS_PID"
     # echo "Killed WebSocket process with PID $WS_PID"
@@ -329,3 +338,5 @@ if ps -p "$KUBESHARK_PID" > /dev/null; then
 fi
 
 cleanUp
+
+cd "$current_dir"
