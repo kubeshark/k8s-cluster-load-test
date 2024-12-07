@@ -51,7 +51,7 @@ metadata:
   name: k6-load-test
   namespace: ks-load
 spec:
-  replicas: 1  # Number of replicas
+  replicas: 2  # Number of replicas
   selector:
     matchLabels:
       app: k6-load-test
@@ -70,11 +70,11 @@ spec:
           - name: DURATION
             value: "12h"
           - name: URL
-            value: "http://server.ks-load.svc.cluster.local/ks_logo.png" #smap.png" # "https://nghttp2.org" 
+            value: "http://server.ks-load.svc.cluster.local/smap.png" # "https://nghttp2.org" 
           - name: SLEEP
-            value: "1"
-          - name: CONNECTION
-            value: "keep-alive"
+            value: "10"
+          # - name: CONNECTION
+          #   value: "keep-alive"
 ---
 apiVersion: v1
 kind: Service
