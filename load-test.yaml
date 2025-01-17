@@ -1,25 +1,25 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: ks-load
+  name: ks-load-mert-2
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: server
-  namespace: ks-load
+  name: http1-server
+  namespace: ks-load-mert-2
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: server
+      app: http1-server
   template:
     metadata:
       labels:
-        app: server
+        app: http1-server
     spec:
       containers:
-      - name: http-server
+      - name: http1-server
         image: kubeshark/k6s-load-server:v52.3.88
         imagePullPolicy: Always
         ports:
@@ -29,11 +29,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: server
-  namespace: ks-load
+  name: http1-server
+  namespace: ks-load-mert-2
 spec:
   selector:
-    app: server
+    app: http1-server
   ports:
     - protocol: TCP
       port: 80
@@ -43,22 +43,21 @@ spec:
       port: 443
       targetPort: 443
       name: https
-  type: ClusterIP
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: k6-load-test
-  namespace: ks-load
+  name: http1-client
+  namespace: ks-load-mert-2
 spec:
-  replicas: 2  # Number of replicas
+  replicas: 1  # Number of replicas
   selector:
     matchLabels:
-      app: k6-load-test
+      app: http1-client
   template:
     metadata:
       labels:
-        app: k6-load-test
+        app: http1-client
     spec:
       containers:
       - name: k6
@@ -70,47 +69,34 @@ spec:
           - name: DURATION
             value: "12h"
           - name: URL
-            value: "http://server.ks-load.svc.cluster.local/smap.png" # "https://nghttp2.org" 
+            value: "http://http1-server.ks-load-mert-2.svc.cluster.local/smap.png" # "https://nghttp2.org" 
           - name: SLEEP
             value: "10"
           # - name: CONNECTION
           #   value: "keep-alive"
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: k6-load-test
-  namespace: ks-load
-spec:
-  selector:
-    app: k6-load-test
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: go-http2-client
-  namespace: ks-load
+  name: http2-client
+  namespace: ks-load-mert-2
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: go-http2-client
+      app: http2-client
   template:
     metadata:
       labels:
-        app: go-http2-client
+        app: http2-client
     spec:
       containers:
-      - name: go-http2-client
+      - name: http2-client
         image: kubeshark/go-http2-client:v52.3.88
         imagePullPolicy: Always
         env:
           - name: URL
-            value: "http://http2-server.ks-load.svc.cluster.local/"  # The URL to send requests to
+            value: "http://http2-server.ks-load-mert-2.svc.cluster.local/"  # The URL to send requests to
           - name: "N"
             value: "10"  # Number of requests to send per connection
           - name: "D"
@@ -118,24 +104,11 @@ spec:
           - name: "V"
             value: "2"  # HTTP version (1 or 2)
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: go-http2-client
-  namespace: ks-load
-spec:
-  selector:
-    app: go-http2-client
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: http2-server
-  namespace: ks-load
+  namespace: ks-load-mert-2
 spec:
   replicas: 1
   selector:
@@ -157,7 +130,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: http2-server
-  namespace: ks-load
+  namespace: ks-load-mert-2
 spec:
   selector:
     app: http2-server
@@ -166,4 +139,3 @@ spec:
       port: 80
       targetPort: 80
       name: http
-  type: ClusterIP
