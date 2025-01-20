@@ -139,3 +139,12 @@ spec:
       port: 80
       targetPort: 80
       name: http
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: ks-load-peer-auth
+  namespace: ks-load-mert-2
+spec:
+  mtls:
+    mode: STRICT
