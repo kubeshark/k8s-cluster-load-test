@@ -1,13 +1,23 @@
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: ks-load-s
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ks-load-c
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: ks-load
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: server
-  namespace: ks-load
+  namespace: ks-load-s
 spec:
   replicas: 1
   selector:
@@ -18,10 +28,12 @@ spec:
       labels:
         app: server
     spec:
+      imagePullSecrets:
+        - name: my-docker-secret
       containers:
       - name: http-server
         image: kubeshark/k6s-load-server:v52.3.88
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
         - containerPort: 443
@@ -30,7 +42,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: server
-  namespace: ks-load
+  namespace: ks-load-s
 spec:
   selector:
     app: server
@@ -49,9 +61,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: k6-load-test
-  namespace: ks-load
+  namespace: ks-load-c
 spec:
-  replicas: 2  # Number of replicas
+  replicas: 1
   selector:
     matchLabels:
       app: k6-load-test
@@ -60,27 +72,27 @@ spec:
       labels:
         app: k6-load-test
     spec:
+      imagePullSecrets:
+        - name: my-docker-secret
       containers:
       - name: k6
         image: kubeshark/k6s-load-test:v52.3.88
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
           - name: VUS
-            value: "1"
-          - name: DURATION
-            value: "12h"
-          - name: URL
-            value: "http://server.ks-load.svc.cluster.local/smap.png" # "https://nghttp2.org" 
-          - name: SLEEP
             value: "10"
-          # - name: CONNECTION
-          #   value: "keep-alive"
+          - name: DURATION
+            value: "5m"
+          - name: URL
+            value: "http://server.ks-load-s.svc.cluster.local/"
+          - name: SLEEP
+            value: "2"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: k6-load-test
-  namespace: ks-load
+  namespace: ks-load-c
 spec:
   selector:
     app: k6-load-test
@@ -104,19 +116,21 @@ spec:
       labels:
         app: go-http2-client
     spec:
+      imagePullSecrets:
+        - name: my-docker-secret
       containers:
       - name: go-http2-client
         image: kubeshark/go-http2-client:v52.3.88
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
           - name: URL
-            value: "http://http2-server.ks-load.svc.cluster.local/"  # The URL to send requests to
+            value: "http://http2-server.ks-load.svc.cluster.local/"
           - name: "N"
-            value: "10"  # Number of requests to send per connection
+            value: "1"
           - name: "D"
-            value: "2"  # Delay between requests in seconds
+            value: "1"
           - name: "V"
-            value: "2"  # HTTP version (1 or 2)
+            value: "1"
 ---
 apiVersion: v1
 kind: Service
@@ -146,10 +160,12 @@ spec:
       labels:
         app: http2-server
     spec:
+      imagePullSecrets:
+        - name: my-docker-secret
       containers:
       - name: http2-server
         image: kubeshark/go-http2-server:v52.3.88
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
 ---
